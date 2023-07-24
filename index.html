@@ -194,6 +194,7 @@
         .stats {
             font-size: 25px;
             margin-top: .7rem;
+            text-align: center;
         }
     </style>
 
@@ -285,6 +286,7 @@
             let currentStreak = 0;
             let longestStreak = 0;
             let playCount = 0;
+            let mistakeCount = 0
 
             for (let puzzleNumber = 0; puzzleNumber < currentPuzzle;) {
                 const rowElement = createElement('div', {className: 'row'});
@@ -298,13 +300,16 @@
                     dayElements[puzzleNumber] = dayElement;
                     rowElement.appendChild(dayElement);
                     
-                    const blocks = days[puzzleNumber];
+                    let blocks = days[puzzleNumber];
                     if (!blocks) {
                         currentStreak = 0;
                         chartElement.className = 'chart empty';
                         continue;
                     }
                     else {
+                        blocks = blocks.filter(block => {return block});
+                        const guesses = blocks.length / 4;
+                        mistakeCount += guesses - 4;
                         playCount ++;
                         currentStreak ++;
                         if (currentStreak > longestStreak) {
@@ -313,7 +318,6 @@
                     }
 
                     blocks.forEach(block => {
-                        if (!block) return;
                         const color = {
                             '\udfe6': 'blue',
                             '\udfe9': 'green',
@@ -328,6 +332,7 @@
 
             const statsElement = createElement('div', {className: 'stats', innerHTML: `
                 played ${playCount} of ${currentPuzzle} puzzles<br />
+                averaged ${(mistakeCount/playCount).toFixed(2)} mistakes<br />
                 longest streak is ${longestStreak} days<br />
                 current streak is ${currentStreak} days
             `});
