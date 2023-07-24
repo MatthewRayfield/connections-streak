@@ -1,0 +1,378 @@
+<head>
+    <style>
+        @font-face {
+            font-family: 'NYTFranklin';
+            src: url('NYTFranklinLight.otf');
+            font-weight: 500;
+        }
+        @font-face {
+            font-family: 'NYTKarnakCondensed';
+            src: url('NYTKarnakCondensed-Bold.otf');
+            font-weight: 500;
+        }
+        body {
+            font-family: 'NYTFranklin';
+            background: #efefe6;
+            margin: 0;
+        }
+        header {
+            position: fixed;
+            top: 0;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #efefe6;
+            border-bottom: 1px solid #bebdb4;
+        }
+        header .titles {
+            margin-left: 90px;
+        }
+        header button {
+            line-height: 40px;
+            background: #5a594e55;
+            color: white;
+            border: none;
+            border-radius: 9999px;
+            font-size: 45px;
+            font-family: monospace;
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            margin-left: 50px;
+            cursor: pointer;
+        }
+        h1 {
+            white-space: nowrap;
+        }
+        h1, h2 {
+            font-family: 'NYTKarnakCondensed';
+            text-align: center;
+            margin: 0;
+            margin-top: .7rem;
+            font-size: 33px;
+        }
+        h5 {
+            font-family: 'NYTFranklin';
+            text-align: center;
+            margin: 0;
+            margin-bottom: .7rem;
+        }
+        a {
+            color: black;
+        }
+        #chart {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin-top: 6rem;
+        }
+        .row {
+            display: flex;
+            justify-content: flex-start;
+            align-items: flex-start;
+            width: calc((20 * 4 + 2) * 7px);
+            margin-top: 3px;
+        }
+        .day {
+            display: inline-block;
+            margin: 0 1px;
+        }
+        .day .chart {
+            width: calc(4 * 20px);
+            min-height: calc(4 * 22px);
+        }
+        .day .chart.empty {
+            background: #5a594e22;
+            border-radius: 5px;
+        }
+        .block {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            margin: 1px 0;
+        }
+        @media only screen and (max-width: 600px) {
+            header .titles {
+                margin-left: 0;
+            }
+            header button {
+                line-height: 30px;
+                font-size: 30px;
+                width: 30px;
+                height: 30px;
+                margin-left: 20px;
+            }
+            .day .chart {
+                width: calc(4 * 12px);
+                min-height: calc(4 * 14px);
+            }
+            .block {
+                width: 12px;
+                height: 12px;
+            }
+            .row {
+                width: calc((12 * 4 + 2) * 7px);
+            }
+        }
+        .block.green {
+            background: #b5e352;
+        }
+        .block.yellow {
+            background: #fbd400;
+        }
+        .block.blue {
+            background: #729eeb;
+        }
+        .block.purple {
+            background: #bc70c4;
+        }
+        #modal-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: #0005;
+        }
+        #modal-wrapper.show {
+            display: flex;
+        }
+        #modal {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-width: 50vw;
+            max-width: 80vw;
+            padding: 1.3rem 2rem;
+            padding-top: 1rem;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 3px 12px -1px #0000004d;
+            margin-bottom: 10vh;
+        }
+        #modal h2 {
+            margin-bottom: .7rem;
+            margin-top: 0;
+        }
+        #modal #paste {
+            background: #efefe6;
+            border-radius: 5px;
+            border: none;
+            border: 1px solid #dbdbd1;
+            outline: none;
+            resize: none;
+            width: 90%;
+            padding: 1rem;
+        }
+        #modal button {
+            font-family: 'NYTFranklin';
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 9999px;
+            border: none;
+            color: white;
+            background: black;
+            width: 160px;
+            height: 48px;
+            margin-top: 1rem;
+            cursor: pointer;
+        }
+        footer {
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            bottom: 0px;
+            text-align: center;
+            width: 100vw;
+            font-size: 12px;
+        }
+    </style>
+
+    <title>Connections Streak</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/png" href="favicon.png" />
+</head>
+
+<body>
+    <header>
+        <div class="titles">
+            <h1><a href="https://www.nytimes.com/games/connections" target="_blank">Connections</a> Streak</h1>
+            <h5>( Very Unofficial )</h5>
+        </div>
+        <button id="add">+</button>
+    </header>
+    <div id="chart"></div>
+    <div id="modal-wrapper">
+        <div id="modal">
+            <h2>Paste your "Share Your Results" text here:</h2>
+            <textarea id="paste" cols="30" rows="11"></textarea>
+            <button id="save">Save Your Results</button>
+        </div>
+    </div>
+    <footer>
+        made with &lt;3 by <a href="http://matthewrayfield.com">matthew rayfield</a><br />
+        don't clear browser cookies if you want to keep your data !<br />
+        not affiliated with nytimes ! i'm just a fan who wanted to track my streak :]<br />
+        <a href="javascript:return void(0)" id="export" download="connections-streak.txt">click here to export your data</a>
+    </footer>
+
+    <script src="moment.js"></script>
+    <script src="moment-timezone-with-data-1970-2030.js"></script>
+    <script>
+        const pasteArea = document.getElementById('paste');
+        const chartElement = document.getElementById('chart');
+        const modalWrapper = document.getElementById('modal-wrapper');
+        const modalElement = document.getElementById('modal');
+        const addButton = document.getElementById('add');
+        const saveButton = document.getElementById('save');
+        const exportLink = document.getElementById('export');
+        let days;
+
+        const daysJson = localStorage.getItem('days');
+        try {
+            days = JSON.parse(daysJson);
+        }
+        catch (e) {}
+        if (!days) days = {};
+
+        function extend(target, source, deep) {
+            var key;
+
+            for (key in source) {
+                if (deep && typeof source[key] == 'object' && typeof target[key] == 'object') {
+                    extend(target[key], source[key], deep);
+                }
+                else {
+                    target[key] = source[key];
+                }
+            }
+
+            return target;
+        }
+
+        function createElement(tagName, properties, children) {
+            var element = document.createElement(tagName),
+                key;
+
+            extend(element, properties, true);
+
+            if (children) {
+                children.forEach(function (child) {
+                    element.appendChild(child);
+                });
+            }
+
+            return element;
+        }
+
+        function render() {
+            chartElement.innerHTML = '';
+            
+            const daysSince = moment.duration(moment().tz('America/New_York').diff(moment.tz('2023-06-12T00:00:00', 'America/New_York'))).as('days');
+            const currentPuzzle = Math.floor(daysSince)+1;
+            for (let puzzleNumber = 0; puzzleNumber < currentPuzzle;) {
+                const rowElement = createElement('div', {className: 'row'});
+                chartElement.appendChild(rowElement);
+
+                for (let d = 0; d < 7; d ++) {
+                    puzzleNumber ++;
+                    if (puzzleNumber > currentPuzzle) break;
+                    const chartElement = createElement('div', {className: 'chart'});
+                    const dayElement = createElement('div', {className: 'day', innerHTML: '#'+puzzleNumber+'<br/>'}, [chartElement]);
+                    rowElement.appendChild(dayElement);
+                    
+                    const blocks = days[puzzleNumber];
+                    if (!blocks) {
+                        chartElement.className = 'chart empty';
+                        continue;
+                    }
+
+                    blocks.forEach(block => {
+                        if (!block) return;
+                        const color = {
+                            '\udfe6': 'blue',
+                            '\udfe9': 'green',
+                            '\udfe8': 'yellow',
+                            '\udfea': 'purple',
+                        }[block];
+                        const blockElement = createElement('div', {className: 'block '+color});
+                        chartElement.appendChild(blockElement);
+                    });
+                }
+            }
+        }
+
+        function add() {
+            const text = pasteArea.value;
+            if (!text) return;
+            pasteArea.value = '';
+            const lines = text.split('\n');
+            if (lines.length < 6) return;
+            const match = (/^Puzzle #([0-9]+)/).exec(lines[1]);
+            if (!match) return;
+
+            let puzzleNumber = parseInt(match[1]);
+            let blocks = [];
+
+            for (let i = 2; i < lines.length; i ++) {
+                const split = lines[i].split('\ud83d');
+                blocks = blocks.concat(split);
+            }
+
+            days[puzzleNumber] = blocks;
+            localStorage.setItem('days', JSON.stringify(days));
+
+            render();
+
+            modalWrapper.className = '';
+            window.scrollTo(0, document.body.scrollHeight);
+
+            makeDataUrl();
+        }
+
+        function makeDataUrl() {
+            let text = '';
+            const keys = Object.keys(days);
+
+            keys.forEach(key => {
+                let s = 'Connections \nPuzzle #'+key + '\n';
+                const blocks = days[key];
+                let count = 0;
+                blocks.forEach((c, i) => {
+                    if (!c) return;
+                    s += '\ud83d' + c;
+                    count ++;
+                    if (count % 4 == 0) s += '\n';
+                });
+                text += s + '\n';
+            });
+
+            //const w = window.open('about:blank');
+            //w.document.write('<pre>'+text+'</pre>');
+
+            const url = 'data:text/plain;base64,' + btoa(unescape(encodeURIComponent(text)));
+            exportLink.href = url;
+        }
+
+        modalElement.addEventListener('click', e => {
+            e.stopPropagation();
+        });
+        modalWrapper.addEventListener('click', () => {
+            modalWrapper.className = '';
+        });
+        addButton.addEventListener('click', () => {
+            modalWrapper.className = 'show';
+            pasteArea.focus();
+        });
+        saveButton.addEventListener('click', add);
+        pasteArea.addEventListener('input', add);
+        render();
+        makeDataUrl();
+    </script>
+</body>
