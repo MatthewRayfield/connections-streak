@@ -61,7 +61,7 @@
         a {
             color: black;
         }
-        #chart {
+        #charts {
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -185,12 +185,15 @@
             cursor: pointer;
         }
         footer {
-            margin-top: 2rem;
+            margin-top: 1rem;
             margin-bottom: 1rem;
-            bottom: 0px;
             text-align: center;
             width: 100vw;
             font-size: 12px;
+        }
+        .stats {
+            font-size: 25px;
+            margin-top: .7rem;
         }
     </style>
 
@@ -207,7 +210,7 @@
         </div>
         <button id="add">+</button>
     </header>
-    <div id="chart"></div>
+    <div id="charts"></div>
     <div id="modal-wrapper">
         <div id="modal">
             <h2>Paste your "Share Your Results" text here:</h2>
@@ -226,13 +229,15 @@
     <script src="moment-timezone-with-data-1970-2030.js"></script>
     <script>
         const pasteArea = document.getElementById('paste');
-        const chartElement = document.getElementById('chart');
+        const chartsElement = document.getElementById('charts');
         const modalWrapper = document.getElementById('modal-wrapper');
         const modalElement = document.getElementById('modal');
         const addButton = document.getElementById('add');
         const saveButton = document.getElementById('save');
         const exportLink = document.getElementById('export');
+        const headerElement = document.querySelector('header');
         let days;
+        let dayElements;
 
         const daysJson = localStorage.getItem('days');
         try {
@@ -272,25 +277,39 @@
         }
 
         function render() {
-            chartElement.innerHTML = '';
+            chartsElement.innerHTML = '';
+            dayElements = [];
             
             const daysSince = moment.duration(moment().tz('America/New_York').diff(moment.tz('2023-06-12T00:00:00', 'America/New_York'))).as('days');
             const currentPuzzle = Math.floor(daysSince)+1;
+            let currentStreak = 0;
+            let longestStreak = 0;
+            let playCount = 0;
+
             for (let puzzleNumber = 0; puzzleNumber < currentPuzzle;) {
                 const rowElement = createElement('div', {className: 'row'});
-                chartElement.appendChild(rowElement);
+                chartsElement.appendChild(rowElement);
 
                 for (let d = 0; d < 7; d ++) {
                     puzzleNumber ++;
                     if (puzzleNumber > currentPuzzle) break;
                     const chartElement = createElement('div', {className: 'chart'});
                     const dayElement = createElement('div', {className: 'day', innerHTML: '#'+puzzleNumber+'<br/>'}, [chartElement]);
+                    dayElements[puzzleNumber] = dayElement;
                     rowElement.appendChild(dayElement);
                     
                     const blocks = days[puzzleNumber];
                     if (!blocks) {
+                        currentStreak = 0;
                         chartElement.className = 'chart empty';
                         continue;
+                    }
+                    else {
+                        playCount ++;
+                        currentStreak ++;
+                        if (currentStreak > longestStreak) {
+                            longestStreak = currentStreak;
+                        }
                     }
 
                     blocks.forEach(block => {
@@ -306,6 +325,13 @@
                     });
                 }
             }
+
+            const statsElement = createElement('div', {className: 'stats', innerHTML: `
+                played ${playCount} of ${currentPuzzle} puzzles<br />
+                longest streak is ${longestStreak} days<br />
+                current streak is ${currentStreak} days
+            `});
+            chartsElement.appendChild(statsElement);
         }
 
         function add() {
@@ -331,7 +357,7 @@
             render();
 
             modalWrapper.className = '';
-            window.scrollTo(0, document.body.scrollHeight);
+            window.scrollTo(0, dayElements[puzzleNumber].offsetTop - (window.innerHeight/2));
 
             makeDataUrl();
         }
