@@ -423,6 +423,10 @@
 
             render();
 
+            modalWrapper.className = '';
+            inputModalElement.className = 'modal';
+            infoModalElement.className = 'modal';
+
             window.scrollTo(0, dayElements[puzzleNumber].offsetTop - (window.innerHeight/2));
 
             makeDataUrl();
