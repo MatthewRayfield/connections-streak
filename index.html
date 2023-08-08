@@ -14,6 +14,11 @@
             font-family: 'NYTFranklin';
             background: #efefe6;
             margin: 0;
+
+            --green: #b5e352;
+            --yellow: #fbd400;
+            --blue: #729eeb;
+            --purple: #bc70c4;
         }
         header {
             position: fixed;
@@ -78,6 +83,7 @@
         .day {
             display: inline-block;
             margin: 0 1px;
+            cursor: pointer;
         }
         .day .chart {
             width: calc(4 * 20px);
@@ -118,16 +124,16 @@
             }
         }
         .block.green {
-            background: #b5e352;
+            background: var(--green);
         }
         .block.yellow {
-            background: #fbd400;
+            background: var(--yellow);
         }
         .block.blue {
-            background: #729eeb;
+            background: var(--blue);
         }
         .block.purple {
-            background: #bc70c4;
+            background: var(--purple);
         }
         #modal-wrapper {
             position: fixed;
@@ -143,13 +149,11 @@
         #modal-wrapper.show {
             display: flex;
         }
-        #modal {
-            display: flex;
+        .modal {
+            display: none;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-width: 50vw;
-            max-width: 80vw;
             padding: 1.3rem 2rem;
             padding-top: 1rem;
             background: white;
@@ -157,11 +161,39 @@
             box-shadow: 0 3px 12px -1px #0000004d;
             margin-bottom: 10vh;
         }
-        #modal h2 {
+        .modal.show {
+            display: flex;
+        }
+        #input-modal {
+            min-width: 50vw;
+            max-width: 80vw;
+        }
+        .modal h2 {
             margin-bottom: .7rem;
             margin-top: 0;
         }
-        #modal #paste {
+        .modal ul {
+            font-size: 28px;
+            margin: 0 0 1rem 0;
+        }
+        .modal ul li {
+            border-radius: 10px;
+            padding: 10px 25px;
+            margin: 5px 0;
+        }
+        .modal ul li:nth-child(1) {
+            background: var(--yellow);
+        }
+        .modal ul li:nth-child(2) {
+            background: var(--green);
+        }
+        .modal ul li:nth-child(3) {
+            background: var(--blue);
+        }
+        .modal ul li:nth-child(4) {
+            background: var(--purple);
+        }
+        .modal #paste {
             background: #efefe6;
             border-radius: 5px;
             border: none;
@@ -171,7 +203,7 @@
             width: 90%;
             padding: 1rem;
         }
-        #modal button {
+        .modal button {
             font-family: 'NYTFranklin';
             font-size: 16px;
             font-weight: 600;
@@ -199,7 +231,7 @@
     </style>
 
     <title>Connections Streak</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
     <link rel="icon" type="image/png" href="favicon.png" />
 </head>
 
@@ -213,10 +245,14 @@
     </header>
     <div id="charts"></div>
     <div id="modal-wrapper">
-        <div id="modal">
+        <div id="input-modal" class="modal">
             <h2>Paste your "Share Your Results" text here:</h2>
             <textarea id="paste" cols="30" rows="11"></textarea>
             <button id="save">Save Your Results</button>
+        </div>
+        <div id="info-modal" class="modal">
+            <h2 id="info-modal-header"></h2>
+            <ul id="info-modal-list"></ul>
         </div>
     </div>
     <footer>
@@ -232,13 +268,17 @@
         const pasteArea = document.getElementById('paste');
         const chartsElement = document.getElementById('charts');
         const modalWrapper = document.getElementById('modal-wrapper');
-        const modalElement = document.getElementById('modal');
+        const inputModalElement = document.getElementById('input-modal');
+        const infoModalElement = document.getElementById('info-modal');
+        const infoModalHeaderElement = document.getElementById('info-modal-header');
+        const infoModalListElement = document.getElementById('info-modal-list');
         const addButton = document.getElementById('add');
         const saveButton = document.getElementById('save');
         const exportLink = document.getElementById('export');
         const headerElement = document.querySelector('header');
         let days;
         let dayElements;
+        let puzzleData;
 
         const daysJson = localStorage.getItem('days');
         try {
@@ -296,6 +336,28 @@
                     puzzleNumber ++;
                     if (puzzleNumber > currentPuzzle) break;
                     const chartElement = createElement('div', {className: 'chart'});
+
+                    (puzzleNumber => {
+                        chartElement.addEventListener('click', () => {
+                            if (puzzleNumber == currentPuzzle && !days[puzzleNumber]) {
+                                if (!confirm("You haven't done today's puzzle.\nAre you sure you want to see its groups ?")) return;
+                            }
+
+                            modalWrapper.className = 'show';
+                            inputModalElement.className = 'modal';
+                            infoModalElement.className = 'modal show';
+
+                            infoModalHeaderElement.innerHTML = `Puzzle #${puzzleNumber}`;
+
+                            infoModalListElement.innerHTML = '';
+                            const groups = puzzleData[puzzleNumber-1];
+                            groups.forEach(groupName => {
+                                const li = createElement('li', {innerHTML: groupName});
+                                infoModalListElement.appendChild(li);
+                            });
+                        });
+                    })(puzzleNumber);
+
                     const dayElement = createElement('div', {className: 'day', innerHTML: '#'+puzzleNumber+'<br/>'}, [chartElement]);
                     dayElements[puzzleNumber] = dayElement;
                     rowElement.appendChild(dayElement);
@@ -332,7 +394,7 @@
 
             const statsElement = createElement('div', {className: 'stats', innerHTML: `
                 played ${playCount} of ${currentPuzzle} puzzles<br />
-                averaged ${(mistakeCount/playCount).toFixed(2)} mistakes<br />
+                averaged ${((mistakeCount/playCount)|0).toFixed(2)} mistakes<br />
                 longest streak is ${longestStreak} days<br />
                 current streak is ${currentStreak} days
             `});
@@ -361,7 +423,6 @@
 
             render();
 
-            modalWrapper.className = '';
             window.scrollTo(0, dayElements[puzzleNumber].offsetTop - (window.innerHeight/2));
 
             makeDataUrl();
@@ -384,26 +445,46 @@
                 text += s + '\n';
             });
 
-            //const w = window.open('about:blank');
-            //w.document.write('<pre>'+text+'</pre>');
-
             const url = 'data:text/plain;base64,' + btoa(unescape(encodeURIComponent(text)));
             exportLink.href = url;
         }
 
-        modalElement.addEventListener('click', e => {
+        inputModalElement.addEventListener('click', e => {
             e.stopPropagation();
         });
         modalWrapper.addEventListener('click', () => {
             modalWrapper.className = '';
+            inputModalElement.className = 'modal';
+            infoModalElement.className = 'modal';
         });
         addButton.addEventListener('click', () => {
             modalWrapper.className = 'show';
+            inputModalElement.className = 'modal show';
+            infoModalElement.className = 'modal';
             pasteArea.focus();
         });
         saveButton.addEventListener('click', add);
         pasteArea.addEventListener('input', add);
         render();
         makeDataUrl();
+
+        (async () => {
+            let response = await fetch('data.json');
+            let data = await response.json();
+            puzzleData = [];
+
+            data.forEach(puzzle => {
+                const groups = [];
+
+                const names = Object.keys(puzzle.groups);
+                names.forEach(name => {
+                    const group = puzzle.groups[name];
+
+                    groups[group.level] = name;
+                });
+
+                puzzleData[puzzle.id] = groups;
+            });
+        })();
     </script>
 </body>
