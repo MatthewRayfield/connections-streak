@@ -394,7 +394,7 @@
 
             const statsElement = createElement('div', {className: 'stats', innerHTML: `
                 played ${playCount} of ${currentPuzzle} puzzles<br />
-                averaged ${((mistakeCount/playCount)|0).toFixed(2)} mistakes<br />
+                averaged ${((mistakeCount/playCount)||0).toFixed(2)} mistakes<br />
                 longest streak is ${longestStreak} days<br />
                 current streak is ${currentStreak} days
             `});
